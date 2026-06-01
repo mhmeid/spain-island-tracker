@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Spain Island — Launch Tracker | Samana Signature</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1A2744; --navy2:#2C3E6B; --gold:#C9A84C; --gold2:#E8D5A3;
+  --sand:#F5EFE6; --cream:#FDFAF5; --white:#FFFFFF;
+  --slate:#4A5568; --muted:#8897B3; --border:#DDD5C8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--sand);color:var(--navy);min-height:100vh;}
+
+/* LOADING */
+#loader{position:fixed;inset:0;background:var(--navy);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;transition:opacity .5s;}
+#loader.hide{opacity:0;pointer-events:none;}
+.loader-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--gold);}
+.loader-spin{width:30px;height:30px;border:3px solid rgba(201,168,76,.2);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.loader-msg{font-size:13px;color:var(--muted);text-align:center;padding:0 30px;}
+.loader-btn{display:none;background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* HEADER */
+.hdr{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.hdr-in{max-width:1400px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.logo{width:38px;height:38px;background:var(--gold);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-weight:700;color:var(--navy);font-size:16px;flex-shrink:0;}
+.hdr-text h1{font-family:'Playfair Display',serif;font-size:17px;color:var(--white);font-weight:600;}
+.hdr-text p{font-size:11px;color:var(--gold2);margin-top:1px;}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.badge-launch{background:var(--gold);color:var(--navy);padding:5px 13px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;}
+.badge-days{background:rgba(255,255,255,.08);color:var(--gold2);padding:5px 12px;border-radius:20px;font-size:11px;border:1px solid rgba(201,168,76,.3);}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#10B981;margin-right:5px;animation:pulse 2s infinite;}
+.sync-lbl{font-size:11px;color:var(--gold2);display:flex;align-items:center;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.tabs{display:flex;gap:3px;background:rgba(255,255,255,.07);padding:3px;border-radius:7px;}
+.tab{padding:6px 14px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--muted);}
+.tab.on{background:var(--gold);color:var(--navy);font-weight:600;}
+
+/* STATS */
+.stats{background:var(--cream);border-bottom:1px solid var(--border);padding:10px 20px;overflow-x:auto;}
+.stats-in{max-width:1400px;margin:0 auto;display:flex;gap:20px;align-items:center;flex-wrap:nowrap;}
+.sp{display:flex;align-items:center;gap:7px;font-size:12px;white-space:nowrap;}
+.sd{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* CONTROLS */
+.ctrl{max-width:1400px;margin:0 auto;padding:14px 20px 8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.fl{display:flex;align-items:center;gap:7px;}
+.fl-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+select,input[type=text]{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 10px;border:1px solid var(--border);border-radius:7px;background:var(--white);color:var(--navy);}
+select{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234A5568' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;cursor:pointer;}
+select:focus,input:focus{outline:none;border-color:var(--gold);}
+.sw{position:relative;flex:1;min-width:180px;}
+.sw input{padding-left:30px;width:100%;}
+.sw-ic{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);}
+.btn-add{margin-left:auto;background:var(--gold);color:var(--navy);border:none;border-radius:7px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-exp{background:var(--white);border:1px solid var(--border);color:var(--slate);border-radius:7px;padding:7px 12px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;}
+
+/* MAIN */
+.main{max-width:1400px;margin:0 auto;padding:10px 20px 60px;}
+
+/* WORKSTREAM */
+.ws{background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.ws-hdr{display:flex;align-items:center;padding:13px 18px;background:var(--navy);gap:12px;cursor:pointer;-webkit-tap-highlight-color:rgba(201,168,76,.15);user-select:none;}
+.ws-num{background:var(--gold);color:var(--navy);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.ws-name{font-family:'Playfair Display',serif;font-size:14px;color:var(--white);flex:1;}
+.ws-cnt{font-size:10px;color:var(--muted);background:rgba(255,255,255,.08);padding:2px 7px;border-radius:8px;}
+.ws-arr{color:var(--gold);font-size:11px;transition:transform .25s;flex-shrink:0;}
+.ws.closed .ws-arr{transform:rotate(-90deg);}
+.ws-body{overflow:hidden;transition:max-height .3s ease;}
+.ws.closed .ws-body{max-height:0!important;}
+
+/* DESKTOP TABLE */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl thead tr{background:#F8F6F1;border-bottom:1px solid var(--border);}
+.tbl th{text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;padding:8px 12px;white-space:nowrap;}
+.tbl tbody tr{border-bottom:1px solid #F0ECE5;}
+.tbl tbody tr:last-child{border-bottom:none;}
+.tbl tbody tr:hover{background:#FDFAF5;}
+.tbl td{padding:9px 12px;font-size:12.5px;vertical-align:top;}
+.iname{font-weight:600;color:var(--navy);min-width:160px;}
+
+/* STATUS & CRIT SELECTS */
+.ss,.cs{border:none!important;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;}
+.ss{font-size:11px;padding:3px 8px;border-radius:20px;}
+.cs{font-size:10px;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;}
+.s0{background:#F1F5F9;color:#64748B;}
+.s1{background:#EEF2FF;color:#4F46E5;}
+.s2{background:#EFF6FF;color:#2563EB;}
+.s3{background:#FFFBEB;color:#D97706;}
+.s4{background:#FEF2F2;color:#DC2626;}
+.s5{background:#ECFDF5;color:#059669;}
+.c0{background:#FEE2E2;color:#991B1B;}
+.c1{background:#FFEDD5;color:#9A3412;}
+.c2{background:#FEF9C3;color:#854D0E;}
+.c3{background:#F0FDF4;color:#166534;}
+
+/* EDITABLE FIELDS */
+.ef{font-family:'DM Sans',sans-serif;font-size:12px;padding:3px 6px;border-radius:4px;border:1px solid transparent;background:transparent;color:var(--navy);width:100%;transition:border .15s;}
+.ef:focus{outline:none;border-color:var(--gold);background:var(--white);}
+.ef[type=date]{min-width:120px;}
+.et{font-size:12px;color:var(--slate);line-height:1.45;padding:3px 5px;border-radius:4px;border:1px solid transparent;cursor:text;min-height:20px;}
+.et:hover{border-color:var(--border);background:#FAFAF8;}
+.et:focus{outline:none;border-color:var(--gold);background:var(--white);}
+
+/* MOBILE CARDS */
+@media(max-width:700px){
+  .hdr-text p,.sync-lbl{display:none;}
+  .hdr-in{padding:10px 14px;}
+  .hdr-text h1{font-size:14px;}
+  .ctrl{padding:10px 14px 6px;}
+  .fl{width:100%;}
+  .fl select{flex:1;}
+  .sw{max-width:100%;}
+  .btn-exp{display:none;}
+  .btn-add{margin-left:0;width:100%;text-align:center;}
+  .main{padding:8px 12px 40px;}
+  .tbl{display:none;}
+  .mcards{display:block;padding:8px 12px 10px;}
+  .stats-in{flex-wrap:nowrap;}
+  .tabs{width:100%;}
+  .tab{flex:1;text-align:center;}
+}
+@media(min-width:701px){.mcards{display:none;}}
+.mcard{background:var(--white);border:1px solid var(--border);border-radius:9px;margin-bottom:10px;overflow:hidden;}
+.mcard-bar{height:3px;}
+.mcard-top{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 12px 6px;gap:8px;}
+.mcard-name{font-size:13px;font-weight:600;color:var(--navy);flex:1;line-height:1.4;}
+.mcard-badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0;}
+.mcard-body{padding:0 12px 10px;display:flex;flex-direction:column;gap:8px;}
+.mcard-row{display:flex;align-items:flex-start;gap:8px;}
+.mcard-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;min-width:70px;padding-top:3px;flex-shrink:0;}
+.mcard-val{flex:1;}
+.mcard-val input{font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:#F8F6F1;color:var(--navy);width:100%;}
+.mcard-val input:focus{outline:none;border-color:var(--gold);background:var(--white);}
+.mcard-val .et{width:100%;display:block;background:#F8F6F1;border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-height:32px;}
+.mcard-val .et:focus{background:var(--white);border-color:var(--gold);}
+.bar-c{background:#DC2626;}.bar-h{background:#EA580C;}.bar-m{background:#D97706;}.bar-l{background:#65A30D;}
+
+/* MEETING */
+#meeting-view{display:none;}
+.mtg-hdr{background:var(--navy);color:var(--white);padding:16px 20px;border-radius:9px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.mtg-hdr h2{font-family:'Playfair Display',serif;font-size:17px;}
+.mtg-date{font-size:12px;color:var(--gold2);}
+.btn-print{background:var(--gold);color:var(--navy);border:none;border-radius:6px;padding:6px 14px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;}
+.msec{background:var(--white);border:1px solid var(--border);border-radius:9px;margin-bottom:12px;overflow:hidden;}
+.msec-hdr{background:var(--navy2);color:var(--white);padding:9px 16px;font-family:'Playfair Display',serif;font-size:13px;display:flex;justify-content:space-between;}
+.mrow{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr 1.2fr 1.5fr;padding:9px 16px;border-bottom:1px solid #F0ECE5;font-size:12px;align-items:start;}
+.mrow:last-child{border-bottom:none;}
+.mcol-hdr{display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr 1.2fr 1.5fr;padding:6px 16px;background:#F8F6F1;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.mnotes{border:1px dashed #DDD;border-radius:4px;padding:4px 6px;font-size:11px;color:#aaa;min-height:26px;font-family:'DM Sans',sans-serif;}
+.mnotes:focus{outline:none;border-color:var(--gold);color:var(--navy);}
+@media(max-width:700px){
+  .mrow,.mcol-hdr{grid-template-columns:2fr 1fr 1fr;}
+  .mrow>*:nth-child(n+4),.mcol-hdr>*:nth-child(n+4){display:none;}
+}
+
+/* MODAL */
+.ovl{display:none;position:fixed;inset:0;background:rgba(26,39,68,.55);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.ovl.on{display:flex;}
+.modal{background:var(--white);border-radius:12px;width:100%;max-width:560px;padding:24px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy);margin-bottom:18px;}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.fgrp{display:flex;flex-direction:column;gap:4px;}
+.fgrp.full{grid-column:1/-1;}
+.fgrp label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.fgrp input,.fgrp select,.fgrp textarea{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;color:var(--navy);background:var(--white);}
+.fgrp select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%234A5568' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:26px;}
+.fgrp textarea{resize:vertical;min-height:65px;}
+.fgrp input:focus,.fgrp select:focus,.fgrp textarea:focus{outline:none;border-color:var(--gold);}
+.m-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--slate);padding:8px 18px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;}
+.btn-save{background:var(--navy);border:none;color:var(--white);padding:8px 20px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;}
+@media(max-width:500px){.fg{grid-template-columns:1fr;}.fgrp.full{grid-column:1;}}
+.hidden{display:none!important;}
+.no-res{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-title">Spain Island</div>
+  <div class="loader-spin" id="lspin"></div>
+  <div class="loader-msg" id="lmsg">Connecting to live tracker…</div>
+  <button class="loader-btn" id="lbtn" onclick="seedAndLoad()">Load All Items</button>
+</div>
+
+<div class="hdr">
+  <div class="hdr-in">
+    <div class="logo">SS</div>
+    <div class="hdr-text">
+      <h1>Spain Island — Launch Action Tracker</h1>
+      <p>Samana Signature · Mohammed Hmeid, CCO</p>
+    </div>
+    <div class="hdr-right">
+      <span class="sync-lbl"><span class="sync-dot"></span>Live</span>
+      <span class="badge-launch">Launch: 15 Sep 2026</span>
+      <span class="badge-days" id="days-badge"></span>
+      <div class="tabs">
+        <button class="tab on" onclick="switchView('tracker',this)">Tracker</button>
+        <button class="tab" onclick="switchView('meeting',this)">Meeting</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stats"><div class="stats-in" id="stats-bar"></div></div>
+
+<div class="ctrl">
+  <div class="fl"><span class="fl-lbl">Status</span>
+    <select id="f-status" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <option>Not Started</option><option>In Planning</option><option>In Progress</option>
+      <option>At Risk</option><option>Critical</option><option>Completed</option>
+    </select>
+  </div>
+  <div class="fl"><span class="fl-lbl">Criticality</span>
+    <select id="f-crit" onchange="applyFilters()">
+      <option value="">All</option>
+      <option>Critical</option><option>High</option><option>Medium</option><option>Low</option>
+    </select>
+  </div>
+  <div class="fl"><span class="fl-lbl">Workstream</span>
+    <select id="f-ws" onchange="applyFilters()"><option value="">All</option></select>
+  </div>
+  <div class="sw"><span class="sw-ic">🔍</span><input type="text" id="f-search" placeholder="Search…" oninput="applyFilters()"></div>
+  <button class="btn-exp" onclick="toggleAll()">Collapse All</button>
+  <button class="btn-add" onclick="document.getElementById('modal').classList.add('on')">+ Add Item</button>
+</div>
+
+<div class="main" id="tracker-view">
+  <div id="wsc"></div>
+  <div class="no-res hidden" id="no-res">No items match your filters.</div>
+</div>
+
+<div class="main" id="meeting-view">
+  <div class="mtg-hdr">
+    <div><h2>Live Meeting Sheet — Spain Island</h2><div class="mtg-date" id="mtg-date"></div></div>
+    <button class="btn-print" onclick="window.print()">🖨 Print</button>
+  </div>
+  <div id="mtg-body"></div>
+</div>
+
+<div class="ovl" id="modal">
+  <div class="modal">
+    <h3>Add New Action Item</h3>
+    <div class="fg">
+      <div class="fgrp full"><label>Action Item</label><input type="text" id="n-name" placeholder="Describe the action…"></div>
+      <div class="fgrp"><label>Workstream</label><select id="n-ws"></select></div>
+      <div class="fgrp"><label>Status</label>
+        <select id="n-status"><option>Not Started</option><option>In Planning</option><option>In Progress</option><option>At Risk</option><option>Critical</option><option>Completed</option></select>
+      </div>
+      <div class="fgrp"><label>Criticality</label>
+        <select id="n-crit"><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div class="fgrp"><label>Owner</label><input type="text" id="n-owner" placeholder="Name"></div>
+      <div class="fgrp"><label>Deadline</label><input type="date" id="n-deadline"></div>
+      <div class="fgrp full"><label>Key Decision</label><textarea id="n-dec" placeholder="What decision needs to be made?"></textarea></div>
+      <div class="fgrp full"><label>Recommendation / Next Action</label><textarea id="n-risk" placeholder="Recommendation or next action…"></textarea></div>
+    </div>
+    <div class="m-acts">
+      <button class="btn-cancel" onclick="document.getElementById('modal').classList.remove('on')">Cancel</button>
+      <button class="btn-save" onclick="saveNew()">Save Item</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Firebase REST URL ──
+var FB = 'https://spain-island-tracker-default-rtdb.asia-southeast1.firebasedatabase.app/tracker';
+
+// ── Default data ──
+var DEFAULTS = [
+  {id:'ws1',name:'Maserati Contract',num:1,items:[
+    {id:'i1a',name:'Ensure all comments are final',status:'In Progress',crit:'Critical',owner:'',deadline:'',decision:'Which party holds final sign-off authority?',risk:'Delay in comment resolution risks missing execution window before launch.'},
+    {id:'i1b',name:'Payment schedule processing',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Payment milestone structure to be confirmed with Finance.',risk:'Unprocessed payments may trigger brand license suspension.'},
+    {id:'i1c',name:'Meetings scheduled & team onboarded',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Identify cross-functional leads and align kickoff date.',risk:'Delayed onboarding reduces ramp-up time ahead of September launch.'}
+  ]},
+  {id:'ws2',name:'HR Org Structure',num:2,items:[
+    {id:'i2a',name:'Sales Directors — all roles filled',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Final headcount sign-off required from Imran Farooq.',risk:'Open Director roles directly risk sales readiness at launch.'},
+    {id:'i2b',name:'Sales Managers — all roles filled',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Confirm manager-to-director ratio and reporting lines.',risk:'Unstructured sales team impacts pipeline management.'},
+    {id:'i2c',name:'Partner Relations — role filled',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Determine seniority level: Manager or Director.',risk:'Delay affects broker outreach and agency onboarding timeline.'},
+    {id:'i2d',name:'Commissions structure defined',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Commission tiers, payment timing, and eligibility criteria.',risk:'Ambiguity will demotivate sales force at critical launch phase.'}
+  ]},
+  {id:'ws3',name:'Samana Signature Branding',num:3,items:[
+    {id:'i3a',name:'Agency appointment confirmed',status:'Completed',crit:'Critical',owner:'',deadline:'',decision:'Seventh Art selected — formalise appointment letter.',risk:'Delay in formalisation risks scope and cost alignment disputes.'},
+    {id:'i3b',name:'Agency scope and cost agreed',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Agree deliverables, timelines, and fee structure with Seventh Art.',risk:'Undefined scope leads to rework and overspend.'},
+    {id:'i3c',name:'Work commencement & naming finalised',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Final brand name and identity direction to be locked.',risk:'Late naming decision cascades to CGI, collateral, and DLD registration.'}
+  ]},
+  {id:'ws4',name:'Maserati Island Branding',num:4,items:[
+    {id:'i4a',name:'Agency appointment confirmed',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Separate agency to Samana Signature or shared resource?',risk:'Shared agency creates conflict; separate requires parallel management.'},
+    {id:'i4b',name:'Agency scope and cost agreed',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Full brand identity scope: Porto Maserati positioning included.',risk:'Unaligned scope delays CGI and collateral production.'},
+    {id:'i4c',name:'Work commencement initiated',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Set go-live date for brand identity work.',risk:'Critical path item — late start compresses launch readiness window.'}
+  ]},
+  {id:'ws5',name:'CGIs',num:5,items:[
+    {id:'i5a',name:'Select and appoint CGI agencies',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Single vendor or specialist per category?',risk:'Fragmented vendors add coordination burden; single vendor limits quality.'},
+    {id:'i5b',name:'Interior and exterior CGIs',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Approve final layout and design concept before CGI commencement.',risk:'Rework costs escalate significantly if layouts change post-production.'},
+    {id:'i5c',name:'Digital twin and Metaverse',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Define scope: full twin or render-quality experience?',risk:'Technology vendor lead times may exceed available window.'}
+  ]},
+  {id:'ws6',name:'Sales Center',num:6,items:[
+    {id:'i6a',name:'4F — Design Concept approved',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Internal design team or external fit-out contractor?',risk:'Sales center readiness is a key September 15 milestone.'},
+    {id:'i6b',name:'4F — Commencement of work',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Agree construction schedule with building management.',risk:'Contractor availability in Dubai Q3 is constrained.'},
+    {id:'i6c',name:'4F — Finalisation',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Snagging and handover timeline.',risk:'Any overrun directly delays launch day readiness.'},
+    {id:'i6d',name:'Scale Models — Samana World, Porto Maserati, Building, Unit',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Which supplier? Lead time is typically 8-12 weeks.',risk:'Models must be ordered immediately to arrive by September.'},
+    {id:'i6e',name:'Digital content creation',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Content scope: video, interactive screens, presentations.',risk:'Late briefing compresses production time.'},
+    {id:'i6f',name:'Customer Site — identify location',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Preferred area / proximity to island access point.',risk:'Lease/permit lead times may limit options.'},
+    {id:'i6g',name:'Customer Site — cost, contract, design, opening',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Temporary or permanent structure?',risk:'Regulatory approvals for temporary structures can be lengthy.'},
+    {id:'i6h',name:'Island Site — design and build',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Tender or direct award for island site?',risk:'Marine logistics and access constraints affect timeline.'}
+  ]},
+  {id:'ws7',name:'Show Apartment',num:7,items:[
+    {id:'i7a',name:'Design',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Maserati-approved interior design concept required.',risk:'Show apartment is a primary conversion tool — quality is non-negotiable.'},
+    {id:'i7b',name:'Build',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Which unit and contractor?',risk:'Build timeline must be confirmed against September 15 milestone.'},
+    {id:'i7c',name:'Furniture and finishing',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Luxury FF&E specification — Maserati palette alignment.',risk:'Long-lead furniture orders must be placed in July at the latest.'}
+  ]},
+  {id:'ws8',name:'Development — Maserati Island',num:8,items:[
+    {id:'i8a',name:'Area and typology confirmed',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Unit mix, GFA, and typology sign-off by design team.',risk:'Changes post-DLD submission create delays and refiling costs.'},
+    {id:'i8b',name:'Layout finalisation',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Align layouts with Maserati design guidelines.',risk:'Maserati approval turnaround adds time — allow 4-week buffer.'},
+    {id:'i8c',name:'Submission and approvals',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Identify all required authority approvals and submission dates.',risk:'Government approval timelines are a fixed external dependency.'}
+  ]},
+  {id:'ws9',name:'Maserati Island Interior Design',num:9,items:[
+    {id:'i9a',name:'Imkan Interior Design engagement',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Scope, cost, and engagement terms for Imkan ID collaboration.',risk:'External studio coordination adds complexity to approval chain.'},
+    {id:'i9b',name:'Maserati design approval',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Submit interior concept packages to Maserati for formal approval.',risk:'Brand rejection requires redesign — allow minimum 6-week approval cycle.'}
+  ]},
+  {id:'ws10',name:'DLD & RERA',num:10,items:[
+    {id:'i10a',name:'Approval obtained',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Which DLD office manages island project registration?',risk:'No sales can commence without DLD approval — hard dependency.'},
+    {id:'i10b',name:'Project registration',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Complete registration application and supporting documents.',risk:'Registration timeline typically 4-8 weeks; initiate immediately.'},
+    {id:'i10c',name:'Escrow account opening',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Select escrow bank aligned to tokenization structure.',risk:'Emirates NBD London used for Maldives; confirm applicability here.'},
+    {id:'i10d',name:'Unit and Oqood registration',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Unit numbering and registration process defined.',risk:'Oqood must be in place before any SPA is executed.'}
+  ]},
+  {id:'ws11',name:'Logistics',num:11,items:[
+    {id:'i11a',name:'Transportation to Island — plan and operator',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Marine operator, frequency, and capacity.',risk:'Customer experience begins at embarkation — substandard transport is brand damaging.'},
+    {id:'i11b',name:'Holding Area — design and manning',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Location and specification of mainland holding area.',risk:'Poor holding area experience creates negative first impression.'}
+  ]},
+  {id:'ws12',name:'Corporate Communications',num:12,items:[
+    {id:'i12a',name:'Appoint PR / Comms consultant',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Speciality luxury real estate PR or general agency?',risk:'Late comms appointment limits pre-launch narrative building.'},
+    {id:'i12b',name:'Kickoff meeting',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Internal and agency alignment on messaging framework.',risk:'Misaligned messaging undermines brand consistency.'},
+    {id:'i12c',name:'Strategy and ongoing activity defined',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Define channels, cadence, and KPIs for comms plan.',risk:'Reactive PR approach risks missing launch momentum window.'}
+  ]},
+  {id:'ws13',name:'Broker Trip',num:13,items:[
+    {id:'i13a',name:'Identify destination',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Destination aligned to key broker geographies (GCC, Europe, Asia).',risk:'Destination choice signals market focus to brokers.'},
+    {id:'i13b',name:'Maserati plan and itinerary',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Integrate Maserati brand experience into trip itinerary.',risk:'Unthemed trip loses brand impact opportunity.'},
+    {id:'i13c',name:'Agency and cost',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Event/travel agency brief, RFP, and budget approval.',risk:'Cost overruns on broker trip reduce event budget.'},
+    {id:'i13d',name:'Invitations',status:'Not Started',crit:'Medium',owner:'',deadline:'',decision:'Tier brokers: top 50 / 100 / 200 — criteria and approval.',risk:'Late invitations lead to poor attendance from key accounts.'}
+  ]},
+  {id:'ws14',name:'Events',num:14,items:[
+    {id:'i14a',name:'Appoint events agency',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Agency specialisation: luxury experiential for island launch.',risk:'Quality agency availability in Dubai market is limited.'},
+    {id:'i14b',name:'Events concept, timing, and costings',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Define launch event format: public reveal, broker preview, or sequenced.',risk:'Concept approval delays cascade to all downstream event elements.'},
+    {id:'i14c',name:'Public and broker events and briefings',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Separate or combined events? Media strategy?',risk:'Conflated audiences dilute message to each segment.'}
+  ]},
+  {id:'ws15',name:'Commercials',num:15,items:[
+    {id:'i15a',name:'SPA and EOI template finalisation',status:'In Planning',crit:'Critical',owner:'',deadline:'',decision:'Legal review and approval by Rizwan/Kamran; EOI collection mechanism.',risk:'No signed SPA/EOI = no revenue. Must be launch-ready.'},
+    {id:'i15b',name:'Pricing and payment plans',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Pricing strategy: price-per-sqft, payment plan structure, post-handover terms.',risk:'Poorly structured plans reduce conversion; must align to market comps.'},
+    {id:'i15d',name:'Business Plan Approval — IRR & Development Margin Analysis',status:'Not Started',crit:'Critical',owner:'',deadline:'',decision:'Sign-off on target IRR and development margin based on finalised pricing and payment plan structure.',risk:'Without an approved business plan, pricing and payment plan ratios lack a validated financial anchor. Any post-approval change to pricing or phasing will require resubmission — lock this before SPA templates are finalised.'},
+    {id:'i15c',name:'Offers and discounts policy',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Approval matrix: who can authorise what discount level?',risk:'Ad-hoc discounting without policy damages brand and margin.'}
+  ]},
+  {id:'ws16',name:'Brokerage Agency',num:16,items:[
+    {id:'i16a',name:'Update contracts for Samana Signature',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Samana Signature contract terms differ from standard Samana?',risk:'Outdated contracts expose Samana to commission disputes.'},
+    {id:'i16b',name:'Onboarding agencies',status:'Not Started',crit:'High',owner:'',deadline:'',decision:'Target agency list and onboarding timeline.',risk:'Insufficient agency coverage at launch limits sales reach.'}
+  ]}
+];
+
+var WS = JSON.parse(JSON.stringify(DEFAULTS));
+var allClosed = false;
+
+// ── Status / Crit helpers ──
+function sc(s){return{'Not Started':'s0','In Planning':'s1','In Progress':'s2','At Risk':'s3','Critical':'s4','Completed':'s5'}[s]||'s0';}
+function cc(c){return{Critical:'c0',High:'c1',Medium:'c2',Low:'c3'}[c]||'c1';}
+function bc(c){return{Critical:'bar-c',High:'bar-h',Medium:'bar-m',Low:'bar-l'}[c]||'bar-m';}
+
+// ── Firebase REST helpers ──
+function fbGet(cb){
+  fetch(FB+'.json').then(function(r){return r.json();}).then(cb).catch(function(){cb(null);});
+}
+function fbPatch(wsId,itemId,patch){
+  fetch(FB+'/'+wsId+'/items/'+itemId+'.json',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
+}
+function fbPut(data){
+  return fetch(FB+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+}
+
+// ── Seed ──
+function seedAndLoad(){
+  document.getElementById('lbtn').style.display='none';
+  document.getElementById('lspin').style.display='block';
+  document.getElementById('lmsg').textContent='Loading all items…';
+  var toSave={};
+  DEFAULTS.forEach(function(ws){
+    var items={};
+    ws.items.forEach(function(it){items[it.id]=it;});
+    toSave[ws.id]={id:ws.id,name:ws.name,num:ws.num,items:items};
+  });
+  fbPut(toSave).then(function(){loadData();}).catch(function(){
+    document.getElementById('lmsg').textContent='Save failed. Check Firebase rules.';
+    document.getElementById('lspin').style.display='none';
+    document.getElementById('lbtn').style.display='inline-block';
+  });
+}
+
+// ── Load from Firebase ──
+function loadData(){
+  fbGet(function(data){
+    if(!data){
+      // Show seed button
+      document.getElementById('lmsg').textContent='Database is empty. Tap to load all items.';
+      document.getElementById('lspin').style.display='none';
+      document.getElementById('lbtn').style.display='inline-block';
+      return;
+    }
+    // Merge
+    WS=DEFAULTS.map(function(dws){
+      var fbws=data[dws.id]; if(!fbws) return dws;
+      var dids=dws.items.map(function(i){return i.id;});
+      var base=dws.items.map(function(di){
+        var fi=fbws.items&&fbws.items[di.id];
+        return fi?Object.assign({},di,fi):di;
+      });
+      var extra=fbws.items?Object.values(fbws.items).filter(function(i){return dids.indexOf(i.id)<0;}):[]; 
+      return Object.assign({},dws,{items:base.concat(extra)});
+    });
+    render();
+    hideLoader();
+  });
+}
+
+function hideLoader(){
+  var l=document.getElementById('loader');
+  l.classList.add('hide');
+  setTimeout(function(){l.style.display='none';},600);
+}
+
+// ── Render ──
+function render(){
+  var c=document.getElementById('wsc'); if(!c) return;
+  var states={};
+  WS.forEach(function(ws){var el=document.getElementById(ws.id);if(el) states[ws.id]=el.classList.contains('closed');});
+  c.innerHTML='';
+  // Populate filters
+  var fw=document.getElementById('f-ws'), nw=document.getElementById('n-ws');
+  if(fw.options.length<=1){
+    WS.forEach(function(ws){
+      fw.appendChild(new Option(ws.name,ws.id));
+      if(nw) nw.appendChild(new Option(ws.name,ws.id));
+    });
+  }
+  WS.forEach(function(ws){
+    var div=document.createElement('div');
+    div.className='ws'+(states[ws.id]?' closed':'');
+    div.id=ws.id;
+    var mh=states[ws.id]?'0':'3000px';
+    div.innerHTML='<div class="ws-hdr" data-id="'+ws.id+'"><div class="ws-num">'+ws.num+'</div><div class="ws-name">'+ws.name+'</div><div class="ws-cnt">'+ws.items.length+' items</div><div class="ws-arr">&#9660;</div></div>'+
+      '<div class="ws-body" style="max-height:'+mh+'">'+
+      '<table class="tbl"><thead><tr><th style="width:20%">Action Item</th><th>Status</th><th>Criticality</th><th>Owner</th><th>Deadline</th><th>Key Decision</th><th>Recommendation / Next Action</th></tr></thead><tbody id="tb-'+ws.id+'"></tbody></table>'+
+      '<div class="mcards" id="mc-'+ws.id+'"></div></div>';
+    c.appendChild(div);
+    renderItems(ws);
+  });
+  updateStats();
+  updateMeeting();
+}
+
+function renderItems(ws){
+  var tb=document.getElementById('tb-'+ws.id), mc=document.getElementById('mc-'+ws.id);
+  if(!tb) return; tb.innerHTML=''; if(mc) mc.innerHTML='';
+  ws.items.forEach(function(item){
+    var e=Object.assign({},item,{_w:ws.id});
+    // Table row
+    var tr=document.createElement('tr');
+    tr.id='r-'+item.id; tr.dataset.s=item.status; tr.dataset.c=item.crit; tr.dataset.n=item.name.toLowerCase(); tr.dataset.w=ws.id;
+    tr.innerHTML='<td class="iname">'+item.name+'</td>'+
+      '<td>'+ssel(e)+'</td><td>'+csel(e)+'</td>'+
+      '<td><input class="ef" type="text" value="'+(item.owner||'')+'" placeholder="Owner" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="save(this,\'owner\',this.value)"></td>'+
+      '<td><input class="ef" type="date" value="'+(item.deadline||'')+'" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="save(this,\'deadline\',this.value)"></td>'+
+      '<td><div class="et" contenteditable="true" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="saveEl(this,\'decision\')" spellcheck="false">'+(item.decision||'')+'</div></td>'+
+      '<td><div class="et" contenteditable="true" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="saveEl(this,\'risk\')" spellcheck="false">'+(item.risk||'')+'</div></td>';
+    tb.appendChild(tr);
+    // Mobile card
+    if(mc){
+      var card=document.createElement('div');
+      card.className='mcard'; card.id='m-'+item.id; card.dataset.s=item.status; card.dataset.c=item.crit; card.dataset.n=item.name.toLowerCase(); card.dataset.w=ws.id;
+      card.innerHTML='<div class="mcard-bar '+bc(item.crit)+'"></div>'+
+        '<div class="mcard-top"><div class="mcard-name">'+item.name+'</div><div class="mcard-badges">'+ssel(e)+csel(e)+'</div></div>'+
+        '<div class="mcard-body">'+
+          '<div class="mcard-row"><span class="mcard-lbl">Owner</span><div class="mcard-val"><input type="text" value="'+(item.owner||'')+'" placeholder="Assign owner" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="save(this,\'owner\',this.value)"></div></div>'+
+          '<div class="mcard-row"><span class="mcard-lbl">Deadline</span><div class="mcard-val"><input type="date" value="'+(item.deadline||'')+'" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="save(this,\'deadline\',this.value)"></div></div>'+
+          '<div class="mcard-row"><span class="mcard-lbl">Decision</span><div class="mcard-val"><div class="et" contenteditable="true" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="saveEl(this,\'decision\')" spellcheck="false">'+(item.decision||'')+'</div></div></div>'+
+          '<div class="mcard-row"><span class="mcard-lbl">Next Action</span><div class="mcard-val"><div class="et" contenteditable="true" data-id="'+item.id+'" data-w="'+ws.id+'" onblur="saveEl(this,\'risk\')" spellcheck="false">'+(item.risk||'')+'</div></div></div>'+
+        '</div>';
+      mc.appendChild(card);
+    }
+  });
+}
+
+function ssel(item){
+  var opts=['Not Started','In Planning','In Progress','At Risk','Critical','Completed'];
+  return '<select class="ss '+sc(item.status)+'" data-id="'+item.id+'" data-w="'+item._w+'" onchange="onSC(this)">'+opts.map(function(o){return '<option'+(o===item.status?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+}
+function csel(item){
+  var opts=['Critical','High','Medium','Low'];
+  return '<select class="cs '+cc(item.crit)+'" data-id="'+item.id+'" data-w="'+item._w+'" onchange="onCC(this)">'+opts.map(function(o){return '<option'+(o===item.crit?' selected':'')+'>'+o+'</option>';}).join('')+'</select>';
+}
+
+function onSC(sel){sel.className='ss '+sc(sel.value);var r=document.getElementById('r-'+sel.dataset.id);if(r)r.dataset.s=sel.value;var m=document.getElementById('m-'+sel.dataset.id);if(m)m.dataset.s=sel.value;updateStats();fbPatch(sel.dataset.w,sel.dataset.id,{status:sel.value});}
+function onCC(sel){sel.className='cs '+cc(sel.value);var r=document.getElementById('r-'+sel.dataset.id);if(r)r.dataset.c=sel.value;var m=document.getElementById('m-'+sel.dataset.id);if(m)m.dataset.c=sel.value;fbPatch(sel.dataset.w,sel.dataset.id,{crit:sel.value});}
+function save(el,field,val){var p={};p[field]=val;fbPatch(el.dataset.w,el.dataset.id,p);}
+function saveEl(el,field){var p={};p[field]=el.innerText.trim();fbPatch(el.dataset.w,el.dataset.id,p);}
+
+// ── Stats ──
+function updateStats(){
+  var cnt={'Not Started':0,'In Planning':0,'In Progress':0,'At Risk':0,'Critical':0,'Completed':0},tot=0;
+  WS.forEach(function(ws){ws.items.forEach(function(i){cnt[i.status]++;tot++;});});
+  var bar=document.getElementById('stats-bar');if(!bar)return;
+  var cols={'Not Started':'#94A3B8','In Planning':'#6B7FD7','In Progress':'#3B82F6','At Risk':'#F59E0B','Critical':'#EF4444','Completed':'#10B981'};
+  var h='<span class="sp" style="color:var(--muted)">Total <strong style="color:var(--navy);margin-left:3px">'+tot+'</strong></span>';
+  Object.keys(cnt).forEach(function(k){if(cnt[k]>0)h+='<span class="sp"><span class="sd" style="background:'+cols[k]+'"></span><span style="color:var(--slate)">'+k+'</span><span style="font-weight:600;color:var(--navy)">'+cnt[k]+'</span></span>';});
+  bar.innerHTML=h;
+}
+
+// ── Toggle workstream ──
+function toggleWS(id){var el=document.getElementById(id);if(!el)return;el.classList.toggle('closed');var b=el.querySelector('.ws-body');b.style.maxHeight=el.classList.contains('closed')?'0':'3000px';}
+function toggleAll(){allClosed=!allClosed;var btn=document.querySelector('.btn-exp');WS.forEach(function(ws){var el=document.getElementById(ws.id);if(!el)return;var b=el.querySelector('.ws-body');if(allClosed){el.classList.add('closed');b.style.maxHeight='0';}else{el.classList.remove('closed');b.style.maxHeight='3000px';}});if(btn)btn.textContent=allClosed?'Expand All':'Collapse All';}
+
+// ── Filters ──
+function applyFilters(){
+  var fs=document.getElementById('f-status').value,fc=document.getElementById('f-crit').value,fw=document.getElementById('f-ws').value,fq=document.getElementById('f-search').value.toLowerCase(),av=false;
+  WS.forEach(function(ws){
+    var we=document.getElementById(ws.id);if(!we)return;
+    if(fw&&ws.id!==fw){we.classList.add('hidden');return;}
+    var wv=false;
+    ws.items.forEach(function(item){
+      var r=document.getElementById('r-'+item.id),m=document.getElementById('m-'+item.id);
+      var ok=(!fs||item.status===fs)&&(!fc||item.crit===fc)&&(!fq||item.name.toLowerCase().indexOf(fq)>-1||(item.decision||'').toLowerCase().indexOf(fq)>-1||(item.risk||'').toLowerCase().indexOf(fq)>-1);
+      if(r){if(ok)r.classList.remove('hidden');else r.classList.add('hidden');}
+      if(m){if(ok)m.classList.remove('hidden');else m.classList.add('hidden');}
+      if(ok){wv=true;av=true;}
+    });
+    if(wv){we.classList.remove('hidden');if(we.classList.contains('closed')){we.classList.remove('closed');we.querySelector('.ws-body').style.maxHeight='3000px';}}
+    else we.classList.add('hidden');
+  });
+  document.getElementById('no-res').classList.toggle('hidden',av);
+}
+
+// ── View switch ──
+function switchView(v,btn){
+  document.getElementById('tracker-view').style.display=v==='tracker'?'block':'none';
+  document.getElementById('meeting-view').style.display=v==='meeting'?'block':'none';
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('on');});
+  if(btn)btn.classList.add('on');
+}
+
+// ── Meeting ──
+function updateMeeting(){
+  var c=document.getElementById('mtg-body');if(!c)return;c.innerHTML='';
+  WS.forEach(function(ws){
+    var div=document.createElement('div');div.className='msec';
+    div.innerHTML='<div class="msec-hdr"><span>'+ws.num+'. '+ws.name+'</span><span style="font-size:11px;opacity:.6">'+ws.items.length+' items</span></div>'+
+      '<div class="mcol-hdr"><div>Action</div><div>Status</div><div>Criticality</div><div>Owner</div><div>Deadline</div><div>Notes</div></div>'+
+      ws.items.map(function(i){return '<div class="mrow"><div style="font-weight:600;color:var(--navy)">'+i.name+'</div><div><span class="ss '+sc(i.status)+'" style="font-size:10.5px">'+i.status+'</span></div><div><span class="cs '+cc(i.crit)+'">'+i.crit+'</span></div><div style="color:var(--slate)">'+(i.owner||'—')+'</div><div style="color:var(--slate)">'+(i.deadline||'—')+'</div><div><div class="mnotes" contenteditable="true"></div></div></div>';}).join('');
+    c.appendChild(div);
+  });
+}
+
+// ── Add new item ──
+function saveNew(){
+  var name=document.getElementById('n-name').value.trim(),wsId=document.getElementById('n-ws').value;
+  if(!name||!wsId){alert('Please enter an action and select a workstream.');return;}
+  var item={id:'c'+Date.now(),name:name,status:document.getElementById('n-status').value,crit:document.getElementById('n-crit').value,owner:document.getElementById('n-owner').value.trim(),deadline:document.getElementById('n-deadline').value,decision:document.getElementById('n-dec').value.trim(),risk:document.getElementById('n-risk').value.trim()};
+  var ws=WS.find(function(w){return w.id===wsId;});
+  if(ws){ws.items.push(item);renderItems(ws);updateStats();}
+  fbPatch(wsId,item.id,item);
+  document.getElementById('modal').classList.remove('on');
+  ['n-name','n-owner','n-deadline','n-dec','n-risk'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+}
+
+// ── Countdown ──
+function countdown(){var d=new Date('2026-09-15')-new Date(),b=document.getElementById('days-badge');if(b)b.textContent=d>0?Math.ceil(d/864e5)+' days to launch':'Launched';}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded',function(){
+  countdown();setInterval(countdown,60000);
+  var md=document.getElementById('mtg-date');if(md)md.textContent='Meeting — '+new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  // Workstream toggle — click + touch
+  document.getElementById('wsc').addEventListener('click',function(e){var h=e.target.closest('.ws-hdr');if(h&&h.dataset.id){e.preventDefault();toggleWS(h.dataset.id);}});
+  document.getElementById('wsc').addEventListener('touchend',function(e){var h=e.target.closest('.ws-hdr');if(h&&h.dataset.id){e.preventDefault();toggleWS(h.dataset.id);}},{passive:false});
+  // Modal close on backdrop
+  document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('on');});
+  // Load data
+  loadData();
+});
+</script>
+</body>
+</html>
